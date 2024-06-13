@@ -1,0 +1,61 @@
+<scene version='3.0.0'>
+    <integrator type='path'/>
+
+    <sensor type="perspective">
+        <float name="fov" value="60"/>
+        <transform name="to_world">
+            <lookat target="0, 0, 0"
+                    origin="3, 0, 0"
+                    up    ="0, 0, 1"/>
+        </transform>
+        <sampler type="independent">
+            <integer name="sample_count" value="128"/>
+        </sampler>
+        <film type="hdrfilm">
+            <rfilter type="box"/>
+            <integer name="width"  value="1024"/>
+            <integer name="height" value="1024"/>
+            <string name="pixel_format" value="rgb"/>
+        </film>
+    </sensor>
+
+    <shape type="obj">
+        <string name="filename" value="meshes/globe1.obj"/>
+        <transform name="to_world">
+            <rotate x="1" angle="90"/>
+            <translate x="0" y="0" z="-120"/>
+            <scale value="0.01"/>
+        </transform>
+        <bsdf type="diffuse">
+            <texture name="reflectance" type="bitmap">
+                <string name="filename" value="maps/world.jpg"/>
+                <boolean name="raw" value="false"/>
+            </texture>
+        </bsdf>
+    </shape>
+
+    <shape type="obj">
+        <string name="filename" value="meshes/globe2.obj"/>
+        <transform name="to_world">
+            <rotate x="1" angle="90"/>
+            <translate x="0" y="0" z="-120"/>
+            <scale value="0.01"/>
+        </transform>
+        <bsdf type="roughconductor">
+            <string name="material" value="Au"/>
+            <string name="distribution" value="ggx"/>
+        </bsdf>
+    </shape>
+
+    <emitter type="point">
+        <point name="position" x="3" y="-3" z="3"/>
+        <spectrum name="intensity" value="100.0"/>
+    </emitter>
+
+    <emitter type="constant">
+        <rgb name="radiance" value="0.1"/>
+    </emitter>
+</scene>
+
+
+
