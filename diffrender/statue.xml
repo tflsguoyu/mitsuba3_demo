@@ -1,0 +1,40 @@
+<scene version='3.5.0'>
+    <integrator type='prb'>
+        <boolean name="hide_emitters" value="true"/>
+    </integrator>
+
+    <sensor type="perspective">
+        <float name="fov" value="60"/>
+        <transform name="to_world">
+            <lookat target="0, 0, 0"
+                    origin="3, 0, 0"
+                    up    ="0, 0, 1"/>
+        </transform>
+        <sampler type="independent">
+            <integer name="sample_count" value="4"/>
+        </sampler>
+        <film type="hdrfilm">
+            <integer name="width"  value="1024"/>
+            <integer name="height" value="1024"/>
+            <string name="pixel_format" value="rgba"/>
+        </film>
+    </sensor>
+
+    <shape type="obj">
+        <string name="filename" value="statue_gs_refine_cxcy/statue_refine_cxcy.obj"/>
+        <bsdf type="roughplastic">
+            <texture name="diffuse_reflectance" type="bitmap">
+                <string name="filename" value="statue_gs_refine_cxcy/dif.png"/>
+                <boolean name="raw" value="false"/>
+            </texture>
+            <float name="alpha" value="0.5"/>
+        </bsdf>
+    </shape>
+
+    <emitter type="envmap">
+        <string name="filename" value="ennis.exr"/>
+    </emitter>
+</scene>
+
+
+
