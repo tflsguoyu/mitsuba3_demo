@@ -80,6 +80,6 @@ def img2gif(target_paths, img_dir):
         )
 
 if __name__ == "__main__":
-    img2gif(["statue_gs_refine_cxcy/images_5/cam000_frame000001.exr"
-            ,"statue_gs_refine_cxcy/images_5/cam000_frame000031.exr"]
-            , "statue_gs_refine_cxcy_out/8/")
+    img2gif(["statue_gs_refine_cxcy/images_4/cam000_frame000001.bmp"
+            ,"statue_gs_refine_cxcy/images_4/cam000_frame000031.bmp"]
+            , "statue_gs_refine_cxcy_out/r4_2048/")

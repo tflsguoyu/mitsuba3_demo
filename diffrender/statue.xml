@@ -24,7 +24,7 @@
         <string name="filename" value="statue_gs_refine_cxcy/statue_refine_cxcy.obj"/>
         <bsdf type="roughplastic">
             <texture name="diffuse_reflectance" type="bitmap">
-                <string name="filename" value="statue_gs_refine_cxcy/dif.png"/>
+                <string name="filename" value="statue_gs_refine_cxcy/dif_512.png"/>
                 <boolean name="raw" value="false"/>
             </texture>
             <float name="alpha" value="0.2"/>

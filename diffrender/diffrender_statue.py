@@ -39,7 +39,7 @@ def load_camera(in_dir, N=59):
 
         fov = 2 * np.arctan(int(w) / (2 * float(fl))) * 180 / np.pi
 
-        camera_params.append([int(w)/4, int(h)/4, fov, camera_to_world, image_path])
+        camera_params.append([int(w), int(h), fov, camera_to_world, image_path])
 
     return camera_params
 
@@ -76,9 +76,8 @@ def main(in_dir, out_dir):
         mask = np.array(image)[:, :, 3]
 
         # load reference image and apply mask to it
-        image_ref = np.array(mi.Bitmap(in_dir + "images_5/" + image_path[:-3]+'exr'))
-        image_ref = image_ref[:, :, :3].clip(0, 1)
-        # image_ref = image_ref[:, :, :3].clip(0, 255).astype("float32") / 255
+        image_ref = np.array(mi.Bitmap(in_dir + "images/" + image_path))
+        image_ref = image_ref[:, :, :3].clip(0, 255).astype("float32") / 255
         image_ref[mask == 0] = 0 
         image_ref_list.append(mi.TensorXf(image_ref))
 
@@ -93,13 +92,13 @@ def main(in_dir, out_dir):
     # opt[key_envmap] = mi.TensorXf(0.5 * np.ones((200, 400, 3)))
     # opt[key_diffuse] = mi.TensorXf(0.5 * np.ones((512, 512, 3)))
     opt[key_envmap] = mi.TensorXf(0.5 * np.random.rand(200, 400, 3))
-    opt[key_diffuse] = mi.TensorXf(0.5 * np.random.rand(512, 512, 3))
-    # opt[key_rough] = params[key_rough]
+    opt[key_diffuse] = mi.TensorXf(0.5 * np.random.rand(2048, 2048, 3))
+    # opt[key_diffuse] = params_list[0][key_diffuse]
+    # opt[key_rough] = 0.2
     for params in params_list:
         params.update(opt)
 
     iteration_count = 500
-
     errors = []
     pbar = tqdm.trange(iteration_count)
     for it in pbar:
@@ -107,17 +106,16 @@ def main(in_dir, out_dir):
         loss = 0
         image_list = []
         for i in range(len(camera_params_list)):
-            # params_new = update_params(params_list[i], camera_params_list[i])
-
             # Perform a (noisy) differentiable rendering of the scene
-            image_list.append(mi.render(scene_list[i], params_list[i], spp=64))
+            image_list.append(mi.render(scene_list[i], params_list[i], spp=4))
 
             # Evaluate the objective function from the current rendered image
             loss += mse(image_list[i], image_ref_list[i]) * (1 / len(camera_params_list))
 
         if it % 10 == 0 or it == (iteration_count-1):
             for i in range(len(camera_params_list)):
-                mi.util.write_bitmap(out_dir + f"statue_{i}_{it:03d}.exr", image_list[i])
+                if i == 0 or i == int(len(camera_params_list)/2):
+                    mi.util.write_bitmap(out_dir + f"statue_{i}_{it:03d}.exr", image_list[i])
             mi.util.write_bitmap(out_dir + f"envmap_{it:03d}.exr", opt[key_envmap])
             mi.util.write_bitmap(out_dir + f"diffuse_{it:03d}.exr", opt[key_diffuse])
             plt.plot(errors)
