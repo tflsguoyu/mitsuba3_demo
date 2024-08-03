@@ -15,16 +15,16 @@ def exrread(img_path):
 def img2gif(target_paths, img_dir):
     targets = []
     for target_path in target_paths:
-        if target_path[-3:] == 'bmp':
-            targets.append( (np.array(cv2.imread(target_path)[:,:,[2,1,0]]).astype("float32") / 255) ** (1/2.2) )
+        if target_path[-3:] == 'png':
+            targets.append( (np.array(cv2.imread(target_path)[:,:,[2,1,0]]).astype("float32") / 255))
         elif target_path[-3:] == 'exr':
             targets.append( exrread(target_path) )
     
     diffuse_paths = glob.glob(img_dir + "diffuse_*.exr")
     envmap_paths = glob.glob(img_dir + "envmap_*.exr")
     
-    statue0_paths = glob.glob(img_dir + "statue_0_*.exr")
-    statue1_paths = glob.glob(img_dir + "statue_2_*.exr")
+    statue0_paths = glob.glob(img_dir + "rerender_0_*.exr")
+    statue1_paths = glob.glob(img_dir + "rerender_6_*.exr")
 
     frames = []
     for i, envmap_path in enumerate(envmap_paths):
@@ -80,6 +80,6 @@ def img2gif(target_paths, img_dir):
         )
 
 if __name__ == "__main__":
-    img2gif(["statue_gs_refine_cxcy/images_4/cam000_frame000001.bmp"
-            ,"statue_gs_refine_cxcy/images_4/cam000_frame000031.bmp"]
-            , "statue_gs_refine_cxcy_out/r4_2048/")
+    img2gif(["shoe/images_1_2/frame000000_cam399.png"
+            ,"shoe/images_1_2/frame000000_cam288.png"]
+            , "shoe_out/image1/")
