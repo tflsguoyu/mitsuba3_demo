@@ -31,7 +31,7 @@
         </bsdf>
     </shape>
 
-    <emitter type="envmap" id="env1">
+    <emitter type="envmap" id="env2">
         <string name="filename" value="ennis.exr"/>
     </emitter>
 </scene>

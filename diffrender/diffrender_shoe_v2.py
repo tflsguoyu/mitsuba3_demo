@@ -65,33 +65,56 @@ def update_params(params, camera_params):
     return image_path
 
 def main(in_dir, out_dir):
-    camera_params_list = load_camera(in_dir + "sparse_2/0/")
-
-    scene_list = []
-    params_list = []
-    image_path_list = []
-    image_ref_list = []
-    for i in range(len(camera_params_list)):
+    camera_params_list_1 = load_camera(in_dir + "sparse_1/0/")
+    N1 = len(camera_params_list_1)
+    scene_list_1 = []
+    params_list_1 = []
+    image_ref_list_1 = []
+    for i in range(N1):
         # load scene 
-        scene_list.append(mi.load_file("shoe.xml"))
-        params_list.append(mi.traverse(scene_list[i]))
-
+        scene_list_1.append(mi.load_file("shoe.xml"))
+        params_list_1.append(mi.traverse(scene_list_1[i]))
+        
         # update scene for current camera
-        image_path = update_params(params_list[i], camera_params_list[i])
+        image_path = update_params(params_list_1[i], camera_params_list_1[i])
         
         # render scene under current camera to get mask
-        image = mi.render(scene_list[i], spp=4)
+        image = mi.render(scene_list_1[i], spp=4)
+        mask = np.array(image)[:, :, 3]
+
+        # load reference image and apply mask to it
+        image_ref = np.array(mi.Bitmap(in_dir + "images_1_2/" + image_path))
+        image_ref = image_ref[:, :, :3].clip(0, 255).astype("float32") / 255
+        image_ref[mask == 0] = 0 
+        image_ref_list_1.append(mi.TensorXf(image_ref))
+
+    camera_params_list_2 = load_camera(in_dir + "sparse_2/0/")
+    N2 = len(camera_params_list_2)
+    scene_list_2 = []
+    params_list_2 = []
+    image_ref_list_2 = []
+    for i in range(N2):
+        # load scene 
+        scene_list_2.append(mi.load_file("shoe2.xml"))
+        params_list_2.append(mi.traverse(scene_list_2[i]))
+
+        # update scene for current camera
+        image_path = update_params(params_list_2[i], camera_params_list_2[i])
+        
+        # render scene under current camera to get mask
+        image = mi.render(scene_list_2[i], spp=4)
         mask = np.array(image)[:, :, 3]
 
         # load reference image and apply mask to it
         image_ref = np.array(mi.Bitmap(in_dir + "images_2_2/" + image_path))
         image_ref = image_ref[:, :, :3].clip(0, 255).astype("float32") / 255
         image_ref[mask == 0] = 0 
-        image_ref_list.append(mi.TensorXf(image_ref))
+        image_ref_list_2.append(mi.TensorXf(image_ref))
 
     # exit()
     # Parameters need to be optimized and initialization
-    key_envmap = "EnvironmentMapEmitter.data"
+    key_envmap1 = "env1.data"
+    key_envmap2 = "env2.data"
     key_diffuse = "OBJMesh.bsdf.diffuse_reflectance.data"
     key_rough = "OBJMesh.bsdf.alpha"
 
@@ -99,11 +122,14 @@ def main(in_dir, out_dir):
     opt = mi.ad.Adam(lr=0.005)
     # opt[key_envmap] = mi.TensorXf(0.5 * np.ones((200, 400, 3)))
     # opt[key_diffuse] = mi.TensorXf(0.5 * np.ones((512, 512, 3)))
-    opt[key_envmap] = mi.TensorXf(0.5 * np.random.rand(200, 400, 3))
+    opt[key_envmap1] = mi.TensorXf(0.5 * np.random.rand(200, 400, 3))
+    opt[key_envmap2] = mi.TensorXf(0.5 * np.random.rand(200, 400, 3))
     opt[key_diffuse] = mi.TensorXf(0.5 * np.random.rand(512, 512, 3))
     # opt[key_diffuse] = params_list[0][key_diffuse]
     # opt[key_rough] = 0.2
-    for params in params_list:
+    for params in params_list_1:
+        params.update(opt)
+    for params in params_list_2:
         params.update(opt)
 
     iteration_count = 500
@@ -112,20 +138,31 @@ def main(in_dir, out_dir):
     for it in pbar:
 
         loss = 0
-        image_list = []
-        for i in range(len(camera_params_list)):
-            # Perform a (noisy) differentiable rendering of the scene
-            image_list.append(mi.render(scene_list[i], params_list[i], spp=4))
 
+        image_list_1 = []
+        for i in range(N1):
+            # Perform a (noisy) differentiable rendering of the scene
+            image_list_1.append(mi.render(scene_list_1[i], params_list_1[i], spp=4))
             # Evaluate the objective function from the current rendered image
-            loss += mse(image_list[i], image_ref_list[i]) * (1 / len(camera_params_list))
+            loss += mse(image_list_1[i], image_ref_list_1[i]) * (1 / N1)
+
+        image_list_2 = []
+        for i in range(N2):
+            # Perform a (noisy) differentiable rendering of the scene
+            image_list_2.append(mi.render(scene_list_2[i], params_list_2[i], spp=4))
+            # Evaluate the objective function from the current rendered image
+            loss += mse(image_list_2[i], image_ref_list_2[i]) * (1 / N2)
 
         if it % 10 == 0 or it == (iteration_count-1):
-            for i in range(len(camera_params_list)):
-                if i == 0 or i == int(len(camera_params_list)/2):
-                    mi.util.write_bitmap(out_dir + f"rerender_{i}_{it:03d}.exr", image_list[i])
-                    # print(camera_params_list[i][-1])
-            mi.util.write_bitmap(out_dir + f"envmap_{it:03d}.exr", opt[key_envmap])
+            for i in range(N1):
+                if i == 0 or i == int(N1/2):
+                    mi.util.write_bitmap(out_dir + f"rerender1_{i}_{it:03d}.exr", image_list_1[i])
+            for i in range(N2):
+                if i == 0 or i == int(N2/2):
+                    mi.util.write_bitmap(out_dir + f"rerender2_{i}_{it:03d}.exr", image_list_2[i])
+
+            mi.util.write_bitmap(out_dir + f"envmap1_{it:03d}.exr", opt[key_envmap1])
+            mi.util.write_bitmap(out_dir + f"envmap2_{it:03d}.exr", opt[key_envmap2])
             mi.util.write_bitmap(out_dir + f"diffuse_{it:03d}.exr", opt[key_diffuse])
             plt.plot(errors)
             plt.xlabel('Iteration'); plt.ylabel('MSE(image)'); plt.title(f'Image loss');
@@ -138,12 +175,15 @@ def main(in_dir, out_dir):
         opt.step()
 
         # Post-process the optimized parameters to ensure legal color values.
-        opt[key_envmap] = dr.clamp(opt[key_envmap], 0.0, 10.0)
+        opt[key_envmap1] = dr.clamp(opt[key_envmap1], 0.0, 10.0)
+        opt[key_envmap2] = dr.clamp(opt[key_envmap2], 0.0, 10.0)
         opt[key_diffuse] = dr.clamp(opt[key_diffuse], 0.0, 1.0)
         # opt[key_rough] = dr.clamp(opt[key_rough], 0.001, 0.7)
 
         # Update the scene state to the new optimized values
-        for params in params_list:
+        for params in params_list_1:
+            params.update(opt)
+        for params in params_list_2:
             params.update(opt)
 
         # Track the difference between the current color and the true value

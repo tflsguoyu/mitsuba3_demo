@@ -21,48 +21,55 @@ def img2gif(target_paths, img_dir):
             targets.append( exrread(target_path) )
     
     diffuse_paths = glob.glob(img_dir + "diffuse_*.exr")
-    envmap_paths = glob.glob(img_dir + "envmap_*.exr")
+    envmap1_paths = glob.glob(img_dir + "envmap1_*.exr")
+    envmap2_paths = glob.glob(img_dir + "envmap2_*.exr")
     
-    statue0_paths = glob.glob(img_dir + "rerender_0_*.exr")
-    statue1_paths = glob.glob(img_dir + "rerender_6_*.exr")
+    statue0_paths = glob.glob(img_dir + "rerender1_0_*.exr")
+    statue1_paths = glob.glob(img_dir + "rerender2_0_*.exr")
 
     frames = []
-    for i, envmap_path in enumerate(envmap_paths):
-        print(envmap_path)
+    for i, envmap1_path in enumerate(envmap1_paths):
+        print(envmap1_path)
         diffuse = exrread(diffuse_paths[i])
-        envmap = exrread(envmap_paths[i])
+        envmap1 = exrread(envmap1_paths[i])
+        envmap2 = exrread(envmap2_paths[i])
         statue0 = exrread(statue0_paths[i])
         statue1 = exrread(statue1_paths[i])
         
-        plt.figure(figsize=(18, 12))
-        plt.subplot(231)
+        plt.figure(figsize=(24, 12))
+        plt.subplot(241)
         plt.imshow(targets[0])
         plt.title('Target')
         plt.axis("off")
         
-        plt.subplot(234)
+        plt.subplot(242)
         plt.imshow(statue0)
         plt.title(f'Render ({i})')
         plt.axis("off")
 
-        plt.subplot(232)
+        plt.subplot(245)
         plt.imshow(targets[1])
         plt.title('Target')
         plt.axis("off")
         
-        plt.subplot(235)
+        plt.subplot(246)
         plt.imshow(statue1)
         plt.title(f'Render ({i})')
         plt.axis("off")
         
-        plt.subplot(233)
-        plt.imshow(diffuse)
-        plt.title(f'Diffuse ({i})')
+        plt.subplot(243)
+        plt.imshow(envmap1)
+        plt.title(f'Envmap ({i})')
         plt.axis("off")
 
-        plt.subplot(236)
-        plt.imshow(envmap)
+        plt.subplot(247)
+        plt.imshow(envmap2)
         plt.title(f'Envmap ({i})')
+        plt.axis("off")
+
+        plt.subplot(144)
+        plt.imshow(diffuse)
+        plt.title(f'Diffuse ({i})')
         plt.axis("off")
 
         plt.savefig(img_dir + "tmp.png", bbox_inches='tight')
@@ -81,5 +88,5 @@ def img2gif(target_paths, img_dir):
 
 if __name__ == "__main__":
     img2gif(["shoe/images_1_2/frame000000_cam399.png"
-            ,"shoe/images_1_2/frame000000_cam288.png"]
-            , "shoe_out/image1/")
+            ,"shoe/images_2_2/frame000000_cam399.png"]
+            , "shoe_out/image12/")
